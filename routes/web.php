@@ -2,6 +2,9 @@
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -22,8 +25,23 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'createSession'])->name('checkout.create');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
-// Admin (simple, no auth for now — add middleware later)
-Route::prefix('admin')->name('admin.')->group(function () {
+// Auth
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::get('/register', [RegisterController::class, 'show'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
+});
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Account (requires login)
+Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
+    Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders');
+    Route::get('/orders/{order}', [OrderHistoryController::class, 'show'])->name('orders.show');
+});
+
+// Admin (only accessible when logged in as admin email)
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', fn() => redirect()->route('admin.products.index'));
     Route::resource('products', ProductController::class)->except('show');
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');

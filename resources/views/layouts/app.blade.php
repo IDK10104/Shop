@@ -42,7 +42,21 @@
                     <span class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-violet-500 text-white text-xs flex items-center justify-center font-bold">{{ $count }}</span>
                 @endif
             </a>
-            <a href="{{ route('admin.products.index') }}" class="hidden sm:block text-xs px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-500 hover:text-zinc-300 transition-all">Admin</a>
+            @auth
+                <a href="{{ route('account.orders') }}" class="hidden sm:block text-sm px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-all">
+                    My Orders
+                </a>
+                <form action="{{ route('logout') }}" method="POST" class="hidden sm:block">
+                    @csrf
+                    <button type="submit" class="text-xs px-2.5 py-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 transition-all">Sign out</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="hidden sm:block text-sm px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Sign in</a>
+                <a href="{{ route('register') }}" class="hidden sm:block text-sm px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors">Register</a>
+            @endauth
+            @if(auth()->check() && auth()->user()->email === config('shop.admin_email'))
+                <a href="{{ route('admin.products.index') }}" class="hidden sm:block text-xs px-2.5 py-1.5 rounded-lg bg-violet-500/15 border border-violet-500/25 text-violet-400 hover:text-violet-300 transition-all">Admin</a>
+            @endif
         </nav>
     </div>
 </header>

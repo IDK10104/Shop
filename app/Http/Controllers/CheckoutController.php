@@ -1,10 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Mail\NewOrderAlert;
+use App\Mail\OrderConfirmation;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 
@@ -87,6 +90,16 @@ class CheckoutController extends Controller
         if ($order && $order->status === 'pending') {
             $order->update(['status' => 'paid']);
             CartItem::where('session_id', session()->getId())->delete();
+
+            $order->load('items');
+
+            // Send customer confirmation
+            Mail::to($order->customer_email)
+                ->send(new OrderConfirmation($order));
+
+            // Send admin notification
+            Mail::to('benedekrad@gmail.com')
+                ->send(new NewOrderAlert($order));
         }
         return view('shop.order-success', compact('order'));
     }
